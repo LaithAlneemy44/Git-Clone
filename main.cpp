@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <filesystem>
 
-void init(int argc, char *argv[]);
+int init(int argc, char *argv[]);
 void add(int argc, char *argv[]);
 void commit(int argc, char *argv[]);
 
@@ -14,7 +16,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printEmptyCommand();
-        return 0;
+        return 1;
     }
     
     const string command = argv[1];
@@ -23,7 +25,7 @@ int main(int argc, char *argv[]) {
     }
     
     else if (command == "init") {
-        init(argc, argv);
+        return init(argc, argv);
     }
     
     else if (command == "add") {
@@ -36,13 +38,22 @@ int main(int argc, char *argv[]) {
         
     else {
         printInvalidCommand();
+        return 1;
     }
     
     return 0;
 }
 
 void init(int argc, char *argv[]) {
+    if (filesystem::exists(".gitclone")) {
+        cerr << "Repository already initialised" << endl;
+        return 1;
+    }
     
+    filesystem::create_directory(".gitclone");
+    filesystem::create_directory(".gitclone/objects");
+    ofstream stage(".gitclone/stage");
+    return 0;
 }
 
 void add(int argc, char *argv[]) {
