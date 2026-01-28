@@ -2,6 +2,8 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <sodium.h>
+#include <unordered_map.h>
 
 int init(int argc, char *argv[]);
 void add(int argc, char *argv[]);
@@ -52,12 +54,31 @@ void init(int argc, char *argv[]) {
     
     filesystem::create_directory(".gitclone");
     filesystem::create_directory(".gitclone/objects");
-    ofstream stage(".gitclone/stage");
+    ofstream index(".gitclone/index");
     return 0;
 }
 
 void add(int argc, char *argv[]) {
+    const string normal_mode = "100644 ";
+    ifstream index_read(".gitclone/index");
+    unordered_map<string, string> path_to_line;
+    string line;
+    while (getline(index_read, line)) {
+        const string path = line.substr(line.rfind(' ') + 1);
+        path_to_line[path] = line;
+    }
+   
+    for (int i = 2; i < argc; ++i) {
+        const string path = argv[i];
+        ifstream current_file(path, ios::binary);
+        //Hash function not implemented just there for visuals
+        path_to_line[path] = normal_mode + hash(current_file) + " " + path;
+    }
     
+    ofstream index_write(".gitclone/index", ios::trunc);
+    for (const auto& [path, line] : path_to_line) {
+        index_write << line << endl;
+    }
 }
 
 void commit(int argc, char *argv[]) {
